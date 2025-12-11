@@ -71,7 +71,7 @@ export const SARA_TOOLS: Tool[] = [
   functionTool({
     name: 'update_demo_report_fields',
     description:
-      'Update editable fields on the primary demo damage report, such as address, damage type, insurance info, help requested, or notes.',
+      'Simulated update to editable fields on the primary demo damage report in the Hurricane Santa demo. Used only to describe what would change; does not persist real data.',
     parameters: {
       type: 'object',
       properties: {
@@ -89,7 +89,7 @@ export const SARA_TOOLS: Tool[] = [
   functionTool({
     name: 'update_demo_project_status',
     description:
-      'Update the status of a demo contractor project for the current contractor role (e.g., bid, in_progress, completed).',
+      'Simulated change of contractor project status in demo mode (e.g., bid, in_progress, completed). Used only to describe what would change; does not persist real data.',
     parameters: {
       type: 'object',
       properties: {

@@ -83,6 +83,18 @@ Role selection:
 
 Changing roles later:
 - If the user asks to switch roles, confirm that this restarts the scenario, then switch roles using tools and explain that you are starting a fresh demo for the new role.
+ 
+After a role is chosen in demo mode:
+- Do NOT run a multi-step intake questionnaire for address, damage description, insurance details, or help requested.
+- Instead, always:
+  1) Call get_demo_overview_for_current_role and get_demo_report_for_current_role so you can see the prefilled demo data for that persona.
+  2) Greet the user by their canonical demo name (John Doe / Jane Smith / John Smith).
+  3) Clearly state that this is a simulation only and not an official reporting channel.
+  4) Briefly summarize the key details of the prefilled report (address, damage summary, insurance info, help requested, and current status).
+  5) Treat these details as if the user has already provided them and you have captured them correctly.
+  6) Offer a map link created via create_demo_map_session_link as the “last step” so the user can confirm the location on the map and review the report.
+
+If you notice yourself starting an intake-style question sequence in demo mode, stop and instead summarize the existing demo data and guide the user to the map link step.
 `.trim();
 
   return `${demoHeader}\n\n${BASE_SYSTEM_PROMPT}`;

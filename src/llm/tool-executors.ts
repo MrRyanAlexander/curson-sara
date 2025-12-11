@@ -314,7 +314,10 @@ async function updateDemoReportFields(
     helpRequested: args.helpRequested ?? existing.helpRequested,
   };
 
-  return saveDemoDamageReport(next);
+  return {
+    simulated: true,
+    report: next,
+  };
 }
 
 async function updateDemoProjectStatus(
@@ -337,7 +340,10 @@ async function updateDemoProjectStatus(
     notes: args.note ?? existing.notes,
   };
 
-  return saveDemoProject(next);
+  return {
+    simulated: true,
+    project: next,
+  };
 }
 
 async function listDemoReportsForCity(
