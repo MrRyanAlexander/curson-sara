@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Curson Sara</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        margin: 0;
+        background: #0f172a;
+        color: #e5e7eb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .chat-shell {
+        background: #020617;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.8);
+        width: 100%;
+        max-width: 480px;
+        height: 70vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .chat-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: radial-gradient(circle at 30% 30%, #38bdf8, #6366f1);
+      }
+      .chat-header-text {
+        display: flex;
+        flex-direction: column;
+      }
+      .chat-header-title {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .chat-header-subtitle {
+        font-size: 12px;
+        color: #9ca3af;
+      }
+      .messages {
+        flex: 1;
+        padding: 12px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .bubble {
+        max-width: 80%;
+        padding: 8px 12px;
+        border-radius: 14px;
+        font-size: 14px;
+        line-height: 1.4;
+        white-space: pre-wrap;
+      }
+      .bubble.user {
+        align-self: flex-end;
+        background: #1d4ed8;
+      }
+      .bubble.sara {
+        align-self: flex-start;
+        background: #111827;
+        border: 1px solid #1f2937;
+      }
+      .chat-input-row {
+        padding: 8px;
+        border-top: 1px solid #1f2937;
+        display: flex;
+        gap: 8px;
+      }
+      .chat-input-row input[type='text'] {
+        flex: 1;
+        padding: 8px 10px;
+        border-radius: 999px;
+        border: 1px solid #374151;
+        background: #020617;
+        color: #e5e7eb;
+        font-size: 14px;
+      }
+      .chat-input-row button {
+        border-radius: 999px;
+        border: none;
+        padding: 0 14px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        background: #22c55e;
+        color: #022c22;
+      }
+      .chat-input-row button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      .status {
+        font-size: 11px;
+        color: #6b7280;
+        padding: 0 12px 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-shell">
+      <div class="chat-header">
+        <div class="avatar"></div>
+        <div class="chat-header-text">
+          <div class="chat-header-title">Sara</div>
+          <div class="chat-header-subtitle">Storm & damage recovery assistant</div>
+        </div>
+      </div>
+      <div id="messages" class="messages"></div>
+      <div class="status" id="status">Say hi to start a conversation.</div>
+      <form id="chat-form" class="chat-input-row">
+        <input id="chat-input" type="text" placeholder="Type a message..." autocomplete="off" />
+        <button id="chat-send" type="submit">Send</button>
+      </form>
+    </div>
+
+    <script>
+      const messagesEl = document.getElementById('messages');
+      const statusEl = document.getElementById('status');
+      const formEl = document.getElementById('chat-form');
+      const inputEl = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('chat-send');
+
+      function ensureSessionId() {
+        const key = 'curson-sara-session-id';
+        let existing = window.localStorage.getItem(key);
+        if (!existing) {
+          existing =
+            (typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID()) ||
+            'sess-' + Math.random().toString(36).slice(2);
+          window.localStorage.setItem(key, existing);
+        }
+        return existing;
+      }
+
+      const sessionId = ensureSessionId();
+
+      function appendBubble(text, who) {
+        const div = document.createElement('div');
+        div.className = 'bubble ' + (who === 'user' ? 'user' : 'sara');
+        div.textContent = text;
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      formEl.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = inputEl.value.trim();
+        if (!text) return;
+
+        appendBubble(text, 'user');
+        inputEl.value = '';
+        inputEl.focus();
+        sendBtn.disabled = true;
+        statusEl.textContent = 'Sara is thinking...';
+
+        try {
+          const res = await fetch('/.netlify/functions/web-chat-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId, text }),
+          });
+          if (!res.ok) {
+            throw new Error('Request failed');
+          }
+          const data = await res.json();
+          appendBubble(data.replyText || 'Sorry, I could not respond.', 'sara');
+          statusEl.textContent = 'Connected';
+        } catch (err) {
+          console.error(err);
+          appendBubble('Sorry, something went wrong. Please try again.', 'sara');
+          statusEl.textContent = 'Error talking to Sara.';
+        } finally {
+          sendBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
