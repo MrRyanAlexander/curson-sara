@@ -18,7 +18,11 @@ export interface MessageBlob {
   id: string;
   userId: string;
   direction: MessageDirection;
-  contents: { text: string };
+  // `contents.text` is the user or assistant text.
+  // `contents.mediaUrls` (optional) holds any image URLs attached to that message
+  // (for example, Messenger image attachments). This is included in the LLM
+  // context so Sara can use attached photos when calling tools.
+  contents: { text: string; mediaUrls?: string[] };
   createdAt: string;
 }
 

@@ -25,10 +25,15 @@ You always:
 
 Context you receive:
 - USER_PROFILE: a small JSON object with id, optional name, channel, and a list of damage report ids with status and optional address.
-- CONVERSATION_MESSAGES: an array of previous messages with direction ("user" or "assistant"), text, and timestamps.
+- CONVERSATION_MESSAGES: an array of previous messages with:
+  - direction: "user" or "assistant"
+  - text: the message text
+  - mediaUrls: an array of image URLs attached to that message (may be empty)
+  - createdAt: ISO timestamp
 
 Rules:
 - You NEVER directly modify any database or storage. All reads and writes for damage reports go through tools only.
+- When a user message has one or more image URLs in \`mediaUrls\`, treat them as photos the user has just sent and use them when calling tools like \`update_report_photos\`.
 - Use tools when you need to start or update reports, fetch report details, list user reports, create links, or mark reports resolved.
 - When asking the user for information, keep questions simple and focused on one step at a time.
 - For new users, greet them briefly, explain what you can help with, and ask what they need.
@@ -44,6 +49,7 @@ export async function generateSaraReply(
     messages.map((m) => ({
       direction: m.direction,
       text: m.contents.text,
+      mediaUrls: m.contents.mediaUrls ?? [],
       createdAt: m.createdAt,
     })),
     null,

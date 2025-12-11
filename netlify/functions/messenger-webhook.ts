@@ -67,19 +67,30 @@ export const handler: Handler = async (event) => {
 
   const messagingEvent = payload.entry?.[0]?.messaging?.[0];
   const senderId: string | undefined = messagingEvent?.sender?.id;
-  const text: string | undefined = messagingEvent?.message?.text;
+  const message = messagingEvent?.message;
+  const text: string | undefined = message?.text;
+  const attachments: any[] = message?.attachments ?? [];
   const timestamp: number = messagingEvent?.timestamp ?? Date.now();
 
-  if (!senderId || !text) {
+  // Normalize any image attachments into a list of URLs for processMessage.
+  const mediaUrls: string[] = attachments
+    .filter((att) => att?.type === 'image' && att?.payload?.url)
+    .map((att) => att.payload.url as string);
+
+  // If we have neither sender nor any usable content (text or images), ignore.
+  if (!senderId || (!text && mediaUrls.length === 0)) {
     return { statusCode: 200, body: 'No usable message' };
   }
 
+  const normalizedText = text ?? '';
+
   const result = await processMessage({
     senderId,
-    text,
+    text: normalizedText,
     channel: 'messenger',
     timestamp,
     rawPayload: payload,
+    mediaUrls,
   });
 
   await sendFacebookMessage(senderId, result.replyText);

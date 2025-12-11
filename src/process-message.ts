@@ -16,6 +16,8 @@ export interface IncomingMessage {
   timestamp: number;
   rawPayload: unknown;
   nameHint?: string;
+  // Optional list of image URLs attached to this message (e.g., Messenger photos).
+  mediaUrls?: string[];
 }
 
 export interface ProcessMessageResult {
@@ -23,7 +25,7 @@ export interface ProcessMessageResult {
 }
 
 export async function processMessage(incoming: IncomingMessage): Promise<ProcessMessageResult> {
-  const { senderId, text, channel, timestamp, rawPayload, nameHint } = incoming;
+  const { senderId, text, channel, timestamp, rawPayload, nameHint, mediaUrls } = incoming;
 
   const user = await getOrCreateUser(channel, senderId, nameHint);
   const [history, reports] = await Promise.all([
@@ -46,7 +48,7 @@ export async function processMessage(incoming: IncomingMessage): Promise<Process
       id: crypto.randomUUID(),
       userId: user.id,
       direction: 'user',
-      contents: { text },
+      contents: { text, mediaUrls: mediaUrls && mediaUrls.length > 0 ? mediaUrls : undefined },
       createdAt: createdAtIso,
     },
     {
