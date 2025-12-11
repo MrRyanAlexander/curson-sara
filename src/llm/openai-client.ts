@@ -10,6 +10,7 @@ export const openaiClient = new OpenAI({
 });
 
 // Default model for Sara; can be overridden per-call if needed.
-export const SARA_MODEL = process.env.SARA_MODEL ?? 'gpt-4.1-mini';
+// Use GPT-5 Mini by default, unless explicitly overridden via SARA_MODEL.
+export const SARA_MODEL = process.env.SARA_MODEL ?? 'gpt-5-mini';
 
 

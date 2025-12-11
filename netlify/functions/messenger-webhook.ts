@@ -1,4 +1,5 @@
 import type { Handler } from '@netlify/functions';
+import { connectLambda } from '@netlify/blobs';
 import { processMessage } from '../../src/process-message.js';
 
 // Support both FB_* and FACEBOOK_* env var names for convenience.
@@ -31,6 +32,8 @@ async function sendFacebookMessage(recipientId: string, text: string): Promise<v
 }
 
 export const handler: Handler = async (event) => {
+  // Ensure Netlify Blobs is wired up in local dev and production.
+  connectLambda(event as any);
   if (event.httpMethod === 'GET') {
     const mode = event.queryStringParameters?.['hub.mode'];
     const token = event.queryStringParameters?.['hub.verify_token'];

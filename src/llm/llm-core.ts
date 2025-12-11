@@ -25,7 +25,10 @@ export async function callResponses({
 }: CallResponsesArgs): Promise<CallResponsesResult> {
   const response = await openaiClient.responses.create({
     model: model ?? SARA_MODEL,
-    messages: messages.map((m) => ({
+    // Responses API expects `input`, which can be a list of role/content pairs.
+    // Use simple string content to avoid low-level content-item types.
+    input: messages.map((m) => ({
+      // The Responses API supports 'user', 'assistant', 'system', and 'developer'.
       role: m.role,
       content: m.content,
     })),

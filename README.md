@@ -14,7 +14,7 @@ npm install
 
 ```bash
 OPENAI_API_KEY=sk-...
-SARA_MODEL=gpt-4.1-mini # optional
+SARA_MODEL=gpt-5-mini # optional, defaults to gpt-5-mini
 SITE_URL=http://localhost:8888
 FB_VERIFY_TOKEN=your-verify-token
 FB_PAGE_ACCESS_TOKEN=your-page-access-token

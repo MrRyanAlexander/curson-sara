@@ -1,10 +1,25 @@
 import type { FunctionTool, Tool } from 'openai/resources/responses/responses.mjs';
 
-const functionTool = (tool: Omit<FunctionTool, 'type' | 'strict'>): FunctionTool => ({
-  ...tool,
-  type: 'function',
-  strict: true,
-});
+const functionTool = (tool: Omit<FunctionTool, 'type' | 'strict'>): FunctionTool => {
+  const params = tool.parameters as any;
+
+  // Ensure OpenAI's strict JSON schema requirement is met:
+  // when strict=true, additionalProperties must be explicitly false.
+  const patchedParams =
+    params && params.type === 'object'
+      ? {
+          additionalProperties: false,
+          ...params,
+        }
+      : params;
+
+  return {
+    ...tool,
+    type: 'function',
+    strict: true,
+    parameters: patchedParams,
+  };
+};
 
 export const SARA_TOOLS: Tool[] = [
   functionTool({
@@ -33,7 +48,8 @@ export const SARA_TOOLS: Tool[] = [
           description: 'Full replacement list of photo URLs.',
         },
       },
-      required: ['reportId'],
+       // With strict function tools, OpenAI requires `required` to include every key in properties.
+      required: ['reportId', 'address', 'status', 'photoUrls'],
     },
   }),
   functionTool({
@@ -117,7 +133,8 @@ export const SARA_TOOLS: Tool[] = [
           description: 'Time to live in hours for the link (defaults to 24 if omitted).',
         },
       },
-      required: ['reportId'],
+      // Strict tools require `required` to include every key in `properties`
+      required: ['reportId', 'ttlHours'],
     },
   }),
 ];
