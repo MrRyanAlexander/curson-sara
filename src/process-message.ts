@@ -5,6 +5,7 @@ import {
   type MessageBlob,
   appendMessagesForUser,
   getMessagesForUser,
+  getUserReports,
 } from './utils/blobs.js';
 import { getOrCreateUser, toLlmUserProfile } from './utils/users.js';
 
@@ -25,8 +26,11 @@ export async function processMessage(incoming: IncomingMessage): Promise<Process
   const { senderId, text, channel, timestamp, rawPayload, nameHint } = incoming;
 
   const user = await getOrCreateUser(channel, senderId, nameHint);
-  const history = await getMessagesForUser(user.id);
-  const userProfileForLlm = toLlmUserProfile(user);
+  const [history, reports] = await Promise.all([
+    getMessagesForUser(user.id),
+    getUserReports(user.id),
+  ]);
+  const userProfileForLlm = toLlmUserProfile(user, reports);
 
   const reply = await generateSaraReply({
     text,

@@ -1,4 +1,10 @@
-import { Channel, UserProfileBlob, getUserByChannelId, upsertUser } from './blobs.js';
+import {
+  type Channel,
+  type DamageReportBlob,
+  type UserProfileBlob,
+  getUserByChannelId,
+  upsertUser,
+} from './blobs.js';
 
 export interface UserProfileForLlm {
   id: string;
@@ -17,12 +23,21 @@ export async function getOrCreateUser(
   return upsertUser(channel, channelUserId, { name });
 }
 
-export function toLlmUserProfile(user: UserProfileBlob): UserProfileForLlm {
+export function toLlmUserProfile(
+  user: UserProfileBlob,
+  reports: DamageReportBlob[],
+): UserProfileForLlm {
   return {
     id: user.id,
     name: user.name,
     channel: user.channel,
-    reportIdsWithStatus: user.reportIdsWithStatus ?? [],
+    // Derive report summary fresh on every turn from the reports blobs,
+    // so the LLM always sees the latest IDs, statuses, and addresses.
+    reportIdsWithStatus: reports.map((r) => ({
+      id: r.id,
+      status: r.status,
+      address: r.address,
+    })),
   };
 }
 

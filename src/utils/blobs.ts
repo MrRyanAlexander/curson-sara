@@ -41,9 +41,14 @@ export interface ReportTokenBlob {
   createdAt: string;
 }
 
+// Blob stores:
+// - "users":          one JSON blob per user profile, keyed by `${channel}:${channelUserId}.json`
+// - "messages":       one JSON array per user, keyed by `${userId}.json` (full message history)
+// - "damage_reports": one JSON blob per report, keyed by `${userId}/${reportId}.json`
+// - "reportTokens":   one JSON blob per time-limited report token, keyed by `${reportId}/${token}.json`
 const usersStore = () => getStore({ name: 'users' });
 const messagesStore = () => getStore({ name: 'messages' });
-const reportsStore = () => getStore({ name: 'reports' });
+const reportsStore = () => getStore({ name: 'damage_reports' });
 const reportTokensStore = () => getStore({ name: 'reportTokens' });
 
 const nowIso = () => new Date().toISOString();
