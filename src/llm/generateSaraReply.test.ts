@@ -17,6 +17,7 @@ describe('generateSaraReply', () => {
         id: 'user-1',
         channel: 'web',
         reportIdsWithStatus: [],
+        mode: 'demo',
       },
       messages: [],
       senderId: 'sender-1',

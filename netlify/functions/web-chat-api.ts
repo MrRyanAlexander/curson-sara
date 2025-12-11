@@ -1,6 +1,8 @@
 import type { Handler } from '@netlify/functions';
 import { connectLambda } from '@netlify/blobs';
 import { processMessage } from '../../src/process-message.js';
+import { IS_DEMO } from '../../src/config.js';
+import { seedDemoDataIfNeeded } from '../../src/demo/seed-demo-data.js';
 
 function buildCorsHeaders() {
   return {
@@ -13,6 +15,9 @@ function buildCorsHeaders() {
 export const handler: Handler = async (event) => {
   // Ensure Netlify Blobs is wired up in local dev and production.
   connectLambda(event as any);
+  if (IS_DEMO) {
+    await seedDemoDataIfNeeded();
+  }
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,

@@ -5,12 +5,19 @@ import {
   getUserByChannelId,
   upsertUser,
 } from './blobs.js';
+import type { DemoRole, DemoUserRoleInfo } from '../demo/demo-types.js';
+import { SARA_MODE } from '../config.js';
 
 export interface UserProfileForLlm {
   id: string;
   name?: string;
   channel: Channel;
   reportIdsWithStatus: Array<{ id: string; status: string; address?: string }>;
+  // Demo-only context to help the LLM stay in persona.
+  mode: 'demo' | 'live';
+  demoRole?: DemoRole;
+  demoCanonicalName?: string;
+  primaryDemoReportId?: string;
 }
 
 export async function getOrCreateUser(
@@ -26,6 +33,7 @@ export async function getOrCreateUser(
 export function toLlmUserProfile(
   user: UserProfileBlob,
   reports: DamageReportBlob[],
+  demoRoleInfo?: DemoUserRoleInfo | null,
 ): UserProfileForLlm {
   return {
     id: user.id,
@@ -38,6 +46,10 @@ export function toLlmUserProfile(
       status: r.status,
       address: r.address,
     })),
+    mode: SARA_MODE === 'demo' ? 'demo' : 'live',
+    demoRole: demoRoleInfo?.role ?? user.demoRole,
+    demoCanonicalName: demoRoleInfo?.canonicalName ?? user.demoCanonicalName,
+    primaryDemoReportId: demoRoleInfo?.primaryDemoReportId,
   };
 }
 

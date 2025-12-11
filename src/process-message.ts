@@ -8,6 +8,7 @@ import {
   getUserReports,
 } from './utils/blobs.js';
 import { getOrCreateUser, toLlmUserProfile } from './utils/users.js';
+import { getOrCreateDemoRoleInfo } from './demo/demo-roles.js';
 
 export interface IncomingMessage {
   senderId: string;
@@ -28,11 +29,12 @@ export async function processMessage(incoming: IncomingMessage): Promise<Process
   const { senderId, text, channel, timestamp, rawPayload, nameHint, mediaUrls } = incoming;
 
   const user = await getOrCreateUser(channel, senderId, nameHint);
-  const [history, reports] = await Promise.all([
+  const [history, reports, demoRoleInfo] = await Promise.all([
     getMessagesForUser(user.id),
     getUserReports(user.id),
+    getOrCreateDemoRoleInfo(user.id),
   ]);
-  const userProfileForLlm = toLlmUserProfile(user, reports);
+  const userProfileForLlm = toLlmUserProfile(user, reports, demoRoleInfo);
 
   const reply = await generateSaraReply({
     text,

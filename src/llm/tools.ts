@@ -33,6 +33,140 @@ export const SARA_TOOLS: Tool[] = [
       required: ['address'],
     },
   }),
+  // --- Demo-mode tools ---
+  functionTool({
+    name: 'set_demo_role',
+    description:
+      'In demo mode, set the simulated role for the current user to resident, city, or contractor.',
+    parameters: {
+      type: 'object',
+      properties: {
+        role: {
+          type: 'string',
+          enum: ['resident', 'city', 'contractor'],
+          description: 'Which demo persona to simulate.',
+        },
+      },
+      required: ['role'],
+    },
+  }),
+  functionTool({
+    name: 'get_demo_overview_for_current_role',
+    description:
+      'Return a high-level narrative overview of the current demo persona after Hurricane Santa in Saraville.',
+    parameters: {
+      type: 'object',
+      properties: {},
+    },
+  }),
+  functionTool({
+    name: 'get_demo_report_for_current_role',
+    description:
+      'Fetch the primary demo damage report (and linked project if any) for the current demo role.',
+    parameters: {
+      type: 'object',
+      properties: {},
+    },
+  }),
+  functionTool({
+    name: 'update_demo_report_fields',
+    description:
+      'Update editable fields on the primary demo damage report, such as address, damage type, insurance info, help requested, or notes.',
+    parameters: {
+      type: 'object',
+      properties: {
+        reportId: { type: 'string' },
+        address: { type: 'string' },
+        damageType: { type: 'string' },
+        insuranceInfo: { type: 'string' },
+        helpRequested: { type: 'string' },
+        notes: { type: 'string' },
+      },
+      // With strict tools, OpenAI requires required to include every key.
+      required: ['reportId', 'address', 'damageType', 'insuranceInfo', 'helpRequested', 'notes'],
+    },
+  }),
+  functionTool({
+    name: 'update_demo_project_status',
+    description:
+      'Update the status of a demo contractor project for the current contractor role (e.g., bid, in_progress, completed).',
+    parameters: {
+      type: 'object',
+      properties: {
+        projectId: { type: 'string' },
+        status: {
+          type: 'string',
+          enum: ['bid', 'in_progress', 'completed'],
+        },
+        note: {
+          type: 'string',
+          description: 'Optional short note about the status change.',
+        },
+      },
+      required: ['projectId', 'status', 'note'],
+    },
+  }),
+  functionTool({
+    name: 'list_demo_reports_for_city',
+    description:
+      'For the city role, list demo reports filtered by status and/or a simple area query (e.g., near the high school).',
+    parameters: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: ['unassigned', 'assigned', 'completed', 'any'],
+        },
+        areaQuery: {
+          type: 'string',
+          description: 'Loose description of the area (e.g., near the high school).',
+        },
+      },
+      required: ['status', 'areaQuery'],
+    },
+  }),
+  functionTool({
+    name: 'get_demo_map_summary',
+    description:
+      'Return a role-aware summary for the map: aggregated stats for residents, full report details for city, or assigned jobs for contractors.',
+    parameters: {
+      type: 'object',
+      properties: {
+        viewport: {
+          type: 'object',
+          properties: {
+            centerLat: { type: 'number' },
+            centerLng: { type: 'number' },
+            radiusKm: { type: 'number' },
+          },
+          required: ['centerLat', 'centerLng', 'radiusKm'],
+          // Strict function tools require nested objects to also declare
+          // additionalProperties: false.
+          additionalProperties: false,
+        },
+        areaId: {
+          type: 'string',
+          description: 'Optional known area identifier if the client provides one.',
+        },
+      },
+      required: ['viewport', 'areaId'],
+    },
+  }),
+  functionTool({
+    name: 'get_demo_stats_for_contractor',
+    description:
+      'Return aggregated stats for the current contractor: job counts, completed work, and positive feedback.',
+    parameters: {
+      type: 'object',
+      properties: {
+        lookbackDays: {
+          type: 'number',
+          description: 'Approximate time window in days (e.g., 7 for last week).',
+        },
+      },
+      required: ['lookbackDays'],
+    },
+  }),
   functionTool({
     name: 'update_damage_report_section',
     description: 'Update one logical section of an existing damage report.',
@@ -135,6 +269,21 @@ export const SARA_TOOLS: Tool[] = [
       },
       // Strict tools require `required` to include every key in `properties`
       required: ['reportId', 'ttlHours'],
+    },
+  }),
+  functionTool({
+    name: 'create_demo_map_session_link',
+    description:
+      'In demo mode, create a time-limited tokenized link to the map + chat UI for the current demo role.',
+    parameters: {
+      type: 'object',
+      properties: {
+        ttlHours: {
+          type: 'number',
+          description: 'Time to live in hours for the map session (defaults to 1 if omitted).',
+        },
+      },
+      required: ['ttlHours'],
     },
   }),
 ];

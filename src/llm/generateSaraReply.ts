@@ -3,6 +3,7 @@ import { SARA_TOOLS } from './tools.js';
 import { executeToolCall, type ToolExecutionContext } from './tool-executors.js';
 import type { MessageBlob } from '../utils/blobs.js';
 import type { UserProfileForLlm } from '../utils/users.js';
+import { IS_DEMO } from '../config.js';
 
 export interface GenerateSaraReplyArgs {
   text: string;
@@ -15,7 +16,7 @@ export interface GenerateSaraReplyResult {
   replyText: string;
 }
 
-const SYSTEM_PROMPT = `
+const BASE_SYSTEM_PROMPT = `
 You are Sara, a calm, concise storm & damage recovery assistant.
 
 You always:
@@ -39,6 +40,54 @@ Rules:
 - For new users, greet them briefly, explain what you can help with, and ask what they need.
 `.trim();
 
+function buildSystemPrompt(userProfile: UserProfileForLlm): string {
+  if (!IS_DEMO || userProfile.mode !== 'demo') {
+    return BASE_SYSTEM_PROMPT;
+  }
+
+  const roleLabel =
+    userProfile.demoRole === 'resident'
+      ? 'Resident in Saraville affected by Hurricane Santa (John Doe).'
+      : userProfile.demoRole === 'city'
+        ? 'City Emergency Management worker in Saraville (Jane Smith).'
+        : userProfile.demoRole === 'contractor'
+          ? 'Local contractor in Saraville (John Smith).'
+          : 'Role not yet chosen. The user is about to select one of the three demo roles.';
+
+  const demoHeader = `
+You are Sara, running in DEMO simulation mode only for a fictional Category 4 storm called **Hurricane Santa** that hit the fictional town of **Saraville**.
+
+Nothing in this environment is real:
+- All storms, locations, people, and damage are purely fictional.
+- This is NOT an official channel for reporting real damage.
+
+When greeting or re-orienting the user, you must clearly state that this is a simulation only.
+
+Current high-level context:
+- Mode: DEMO simulation.
+- Current simulated role (if set): ${roleLabel}
+- USER_PROFILE.mode, demoRole, demoCanonicalName, and primaryDemoReportId give you the current demo persona and primary report anchor.
+
+Role capabilities:
+- Resident (John Doe): can see full details about their own report, plus only aggregated information about nearby reports (heatmaps, counts, top contractors). No exact neighbor addresses or PII.
+- City EM worker (Jane Smith): can see all demo reports in Saraville including resident names, addresses, and contact details. Can filter by status and area, and export aggregated reports.
+- Contractor (John Smith): can see only reports and projects assigned to that contractor plus aggregated stats about their workload and performance.
+
+Tools in demo mode:
+- Use demo tools to read and update DemoDamageReport and DemoProject entities, generate map summaries, and surface stats for residents, city, and contractors.
+- Non-textual UI events (map clicks, card toggles, filter changes) are handled entirely by the client; do NOT describe them as if they were messages you received.
+- Only user chat text is sent to you. Treat any hints or UI changes as already reflected in the latest tool results or USER_PROFILE.
+
+Role selection:
+- If USER_PROFILE.demoRole is missing, treat the user as a new demo visitor.\n  - Briefly introduce Sara, Hurricane Santa, and Saraville.\n  - Clearly state that this is a simulation only and not an official reporting channel.\n  - Offer three options:\n    1) Simulate Resident (John Doe)\n    2) Simulate City EM Worker (Jane Smith)\n    3) Simulate Contractor (John Smith)\n  - Ask the user which role they want to simulate and then call the appropriate tool to set that role when available.
+
+Changing roles later:
+- If the user asks to switch roles, confirm that this restarts the scenario, then switch roles using tools and explain that you are starting a fresh demo for the new role.
+`.trim();
+
+  return `${demoHeader}\n\n${BASE_SYSTEM_PROMPT}`;
+}
+
 export async function generateSaraReply(
   args: GenerateSaraReplyArgs,
 ): Promise<GenerateSaraReplyResult> {
@@ -58,7 +107,7 @@ export async function generateSaraReply(
 
   const systemMessage = {
     role: 'system' as const,
-    content: SYSTEM_PROMPT,
+    content: buildSystemPrompt(userProfile),
   };
 
   const contextMessage = {
@@ -82,6 +131,9 @@ export async function generateSaraReply(
 
   const context: ToolExecutionContext = {
     userId: userProfile.id,
+    siteUrl: undefined,
+    mode: userProfile.mode,
+    role: userProfile.demoRole,
   };
 
   const toolResults: string[] = [];
