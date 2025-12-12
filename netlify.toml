@@ -1,11 +1,20 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  publish = "apps/web/dist"
   functions = "netlify/functions"
 
-[[redirects]]
-  from = "/"
-  to = "/index.html"
-  status = 200
+[dev]
+  command = "npm -w apps/web run dev"
+  targetPort = 5173
+  port = 8888
+  autoLaunch = false
 
+[functions]
+  node_bundler = "esbuild"
 
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
